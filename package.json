@@ -1,0 +1,25 @@
+{
+  "name": "@fade-project/deb-build",
+  "version": "1.0.0",
+  "description": "Build a Debian package in Node.js code",
+  "main": "deb-build.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fade-project/deb-build.git"
+  },
+  "author": "ldmsys",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fade-project/deb-build/issues"
+  },
+  "homepage": "https://github.com/fade-project/deb-build#readme",
+  "dependencies": {
+    "recursive-copy": "^2.0.10",
+    "rimraf": "^3.0.2",
+    "targz": "^1.0.1",
+    "tmp": "^0.2.1"
+  }
+}
