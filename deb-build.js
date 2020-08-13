@@ -48,7 +48,7 @@ Architecture: ${architecture}
 Maintainer: ${maintainer_name} <${maintainer_email}>
 Depends: ${depends}
 Homepage: ${url}
-Description: ${desc}`;
+Description: ${desc}\n`;
 }
 function generate_deb_postinst(name, version, desc, cmdline, type, maintainer_name, maintainer_email, postinst_payload) {
     let str = "#!/bin/bash\n";
