@@ -3,7 +3,6 @@
 const fs = require('fs');
 const targz = require('targz');
 const tmpjs = require('tmp');
-const { arch } = require('os');
 
 /* deb-build Module
  * This Subproject is part of FADe Project
@@ -59,7 +58,7 @@ chown -R ${name}:root /usr/lib/${name}\n`;
     str += `echo "${name} v${version} by ${maintainer_name} <${maintainer_email}>"
 ${postinst_payload}\n`;
     if (type == types.systemd) {
-        str += `cat >> /lib/systemd/systemd/${name}.service << EOF
+        str += `cat >> /lib/systemd/system/${name}.service << EOF
 [Unit]
 Description=${desc}
 
