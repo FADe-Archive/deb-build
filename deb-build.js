@@ -3,6 +3,7 @@
 const fs = require('fs');
 const targz = require('targz');
 const tmpjs = require('tmp');
+const rimraf = require('rimraf');
 
 /* deb-build Module
  * This Subproject is part of FADe Project
@@ -108,7 +109,7 @@ function generate_control_targz(control, postinst, prerm) {
         targz.compress({src: workDir.name, dest: tmpTargz, tar: {entries: ["."]}}, (err) => {
             if(err) return rej(err);
             ret_data = fs.readFileSync(tmpTargz);
-            fs.rmdirSync(workDir.name, { recursive: true });
+            rimraf.sync(workDir.name);
             fs.unlinkSync(tmpTargz);
             res(ret_data);
         });
@@ -130,7 +131,7 @@ exports.build = (name, version, desc, url, architecture, depends, priority, run,
             promise_targz_compress({src: data_tar_gz_datadir.name, dest: data_tar_gz_tempFile, tar: {entries: ["."]}}).then(() => {
                 data_tar_gz_data = fs.readFileSync(data_tar_gz_tempFile);
                 fs.unlinkSync(data_tar_gz_tempFile);
-                fs.rmdirSync(data_tar_gz_datadir.name, { recursive: true });
+                rimraf.sync(data_tar_gz_datadir.name);
                 data_tar_gz_datadir = tmpjs.dirSync();
                 if (control_tar_gz_data.length % 2 !== 0) {
                     control_tar_gz_data = Buffer.concat([control_tar_gz_data, Buffer.alloc(1,0)],control_tar_gz_data.length+1);
