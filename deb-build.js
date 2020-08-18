@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const tar = require('tar');
+const tar = require('tar-fs');
 const tmpjs = require('tmp');
 const targz = require('targz');
 const rimraf = require('rimraf');
@@ -103,30 +103,32 @@ function generate_control_targz(control, postinst, prerm) {
     return new Promise((res, rej) => {
         let ret_data;
         let workDir = tmpjs.dirSync();
+        let tmpTar = tmpjs.tmpNameSync();
         let tmpTargz = tmpjs.tmpNameSync();
-        let tmpTargz2 = tmpjs.tmpNameSync();
         fs.writeFileSync(workDir.name+"/prerm", prerm);
         fs.writeFileSync(workDir.name+"/postinst", postinst);
-        tar.c({
-            file: tmpTargz,
-            cwd: workDir.name,
-            mode: 0755
-        }, ['.']).then((_) => {
-            fs.writeFileSync(workDir.name+"/control", control);
-            tar.r({
-                file: tmpTargz,
-                cwd: workDir.name,
-                mode: 0644
-            }, ['control']).then((_) => {
-                stream.pipeline(fs.createReadStream(tmpTargz), zlib.createGzip(), fs.createWriteStream(tmpTargz2), (err) => {
-                    ret_data = fs.readFileSync(tmpTargz2);
-                    rimraf.sync(workDir.name);
-                    fs.unlinkSync(tmpTargz);
-                    fs.unlinkSync(tmpTargz2);
-                    res(ret_data);
+        tar.pack(workDir.name, {
+            finalize: false,
+            fmode: 0755,
+            finish: (samp) => {
+                fs.unlinkSync(workDir.name+"/prerm");
+                fs.unlinkSync(workDir.name+"/postinst");
+                fs.writeFileSync(workDir.name+"/control", control);
+                tar.pack(workDir.name, {
+                    pack: samp,
+                    fmode: 0644,
+                    finish: (samp) => {
+                        stream.pipeline(fs.createReadStream(tmpTar), zlib.createGzip(), fs.createWriteStream(tmpTargz), (err) => {
+                            if(err) rej(err);
+                            ret_data = fs.readFileSync(tmpTargz);
+                            rimraf.sync(workDir.name);
+                            fs.unlinkSync(tmpTargz);
+                            res(ret_data);
+                        });
+                    }
                 });
-            });
-        });
+            }
+        }).pipe(fs.createWriteStream(tmpTar))
     });
 }
 
