@@ -3,6 +3,7 @@
 const fs = require('fs');
 const tar = require('tar');
 const tmpjs = require('tmp');
+const targz = require('targz');
 const rimraf = require('rimraf');
 const zlib = require('zlib');
 const stream = require('stream');

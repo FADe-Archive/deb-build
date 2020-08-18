@@ -1,6 +1,6 @@
 {
   "name": "@fade-project/deb-build",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Build a Debian package in Node.js code",
   "main": "deb-build.js",
   "scripts": {
@@ -19,6 +19,7 @@
   "dependencies": {
     "rimraf": "^3.0.2",
     "tar": "^6.0.5",
+    "targz": "^1.0.1",
     "tmp": "^0.2.1"
   }
 }
