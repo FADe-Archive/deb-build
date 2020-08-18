@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const targz = require('targz');
+const tar = require('tar');
 const tmpjs = require('tmp');
 const rimraf = require('rimraf');
+const zlib = require('zlib');
+const stream = require('stream');
 
 /* deb-build Module
  * This Subproject is part of FADe Project
@@ -95,23 +97,34 @@ systemctl daemon-reload\n`;
 mkdir /usr/lib/${name}`;
     return str;
 }
+
 function generate_control_targz(control, postinst, prerm) {
     return new Promise((res, rej) => {
         let ret_data;
         let workDir = tmpjs.dirSync();
         let tmpTargz = tmpjs.tmpNameSync();
-        fs.writeFileSync(workDir.name+"/control", control);
-        fs.chmodSync(workDir.name+"/control", 0644);
-        fs.writeFileSync(workDir.name+"/postinst", postinst);
-        fs.chmodSync(workDir.name+"/postinst", 0755);
+        let tmpTargz2 = tmpjs.tmpNameSync();
         fs.writeFileSync(workDir.name+"/prerm", prerm);
-        fs.chmodSync(workDir.name+"/prerm", 0755);
-        targz.compress({src: workDir.name, dest: tmpTargz, tar: {entries: ["."]}}, (err) => {
-            if(err) return rej(err);
-            ret_data = fs.readFileSync(tmpTargz);
-            rimraf.sync(workDir.name);
-            fs.unlinkSync(tmpTargz);
-            res(ret_data);
+        fs.writeFileSync(workDir.name+"/postinst", postinst);
+        tar.c({
+            file: tmpTargz,
+            cwd: workDir.name,
+            mode: 0755
+        }, ['.']).then((_) => {
+            fs.writeFileSync(workDir.name+"/control", control);
+            tar.r({
+                file: tmpTargz,
+                cwd: workDir.name,
+                mode: 0644
+            }, ['control']).then((_) => {
+                stream.pipeline(fs.createReadStream(tmpTargz), zlib.createGzip(), fs.createWriteStream(tmpTargz2), (err) => {
+                    ret_data = fs.readFileSync(tmpTargz2);
+                    rimraf.sync(workDir.name);
+                    fs.unlinkSync(tmpTargz);
+                    fs.unlinkSync(tmpTargz2);
+                    res(ret_data);
+                });
+            });
         });
     });
 }
