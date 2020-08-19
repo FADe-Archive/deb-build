@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const tar = require('tar-fs');
+const tar = require('tar-stream');
 const tmpjs = require('tmp');
 const targz = require('targz');
 const rimraf = require('rimraf');
 const zlib = require('zlib');
-const stream = require('stream');
 
 /* deb-build Module
  * This Subproject is part of FADe Project
@@ -101,34 +100,37 @@ mkdir /usr/lib/${name}`;
 
 function generate_control_targz(control, postinst, prerm) {
     return new Promise((res, rej) => {
-        let ret_data;
-        let workDir = tmpjs.dirSync();
-        let tmpTar = tmpjs.tmpNameSync();
-        let tmpTargz = tmpjs.tmpNameSync();
-        fs.writeFileSync(workDir.name+"/prerm", prerm);
-        fs.writeFileSync(workDir.name+"/postinst", postinst);
-        tar.pack(workDir.name, {
-            finalize: false,
-            fmode: 0755,
-            finish: (samp) => {
-                fs.unlinkSync(workDir.name+"/prerm");
-                fs.unlinkSync(workDir.name+"/postinst");
-                fs.writeFileSync(workDir.name+"/control", control);
-                tar.pack(workDir.name, {
-                    pack: samp,
-                    fmode: 0644,
-                    finish: (samp) => {
-                        stream.pipeline(fs.createReadStream(tmpTar), zlib.createGzip(), fs.createWriteStream(tmpTargz), (err) => {
-                            if(err) rej(err);
-                            ret_data = fs.readFileSync(tmpTargz);
-                            rimraf.sync(workDir.name);
-                            fs.unlinkSync(tmpTargz);
-                            res(ret_data);
-                        });
-                    }
-                });
-            }
-        }).pipe(fs.createWriteStream(tmpTar))
+        let tmpTar;
+        let tmparr = [];
+        let pack = tar.pack();
+
+        pack.entry({
+            name: "control",
+            uid: 0,
+            gid: 0,
+            mode: 0o644
+        }, control);
+        pack.entry({
+            name: "postinst",
+            uid: 0,
+            gid: 0,
+            mode: 0o755
+        }, postinst);
+        pack.entry({
+            name: "prerm",
+            uid: 0,
+            gid: 0,
+            mode: 0o755
+        }, prerm, () => {
+            pack.finalize();
+        });
+        pack.on('data', (buf) => {
+            tmparr.push(buf);
+        });
+        pack.on('end', () => {
+            tmpTar = Buffer.concat(tmparr);
+            res(zlib.gzipSync(tmpTar));
+        });
     });
 }
 
@@ -173,3 +175,4 @@ exports.get_data_tar_gz_datadir = () => {
     return data_tar_gz_datadir;
 };
 exports.types = types;
+exports.generate_control_targz = generate_control_targz;

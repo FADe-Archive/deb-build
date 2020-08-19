@@ -27,7 +27,7 @@ var deb = require('@fade-project/deb-build')
 
 ## Credit
  * [targz](https://github.com/miskun/targz) - [MIT License](https://github.com/miskun/targz/blob/master/LICENSE)
- * [tar-fs](https://github.com/mafintosh/tar-fs) - [MIT License](https://github.com/mafintosh/tar-fs/blob/master/LICENSE)
+ * [tar-stream](https://www.npmjs.com/package/tar-stream) - [MIT License](https://github.com/mafintosh/tar-stream/blob/master/LICENSE)
  * [tmp](https://github.com/raszi/node-tmp) - [MIT License](https://github.com/raszi/node-tmp/blob/master/LICENSE)
  * [rimraf](https://github.com/isaacs/rimraf) - [ISC License](https://github.com/isaacs/rimraf/blob/master/LICENSE)
  * Special thanks to [wikipedia:en:ar (Unix)](https://en.wikipedia.org/wiki/Ar_%28Unix%29)
