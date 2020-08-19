@@ -18,7 +18,6 @@
   "homepage": "https://github.com/fade-project/deb-build#readme",
   "dependencies": {
     "rimraf": "^3.0.2",
-    "tar-fs": "^2.1.0",
     "tar-stream": "^2.1.3",
     "targz": "^1.0.1",
     "tmp": "^0.2.1"
