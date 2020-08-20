@@ -137,16 +137,22 @@ function generate_control_targz(control, postinst, prerm) {
 exports.generate_ar_header = generate_ar_header;
 exports.build = (name, version, desc, url, architecture, depends, priority, run, maintainer_name, maintainer_email, type, postinst_payload, prerm_payload) => {
     return new Promise((res, rej) => {
-        let control = generate_deb_control(name, version, maintainer_name, maintainer_email, depends, architecture, priority, url, desc);
+        let commadeps = "";
+        if(typeof depends == "object") {
+           depends.forEach((item, index) => {
+                commadeps += (index != 0)?", ":"";
+                commadeps += item;
+           });
+        }else commadeps = depends;
+        let control = generate_deb_control(name, version, maintainer_name, maintainer_email, commadeps, architecture, priority, url, desc);
         let postinst = generate_deb_postinst(name, version, desc, run, type, maintainer_name, maintainer_email, postinst_payload)
         let prerm = generate_deb_prerm(name, type, prerm_payload);
-    
         let magic_header = Buffer.from("!<arch>\n");
         let debian_binary_data = Buffer.from("2.0\n");
         let debian_binary_header = generate_ar_header("debian-binary", Math.floor(Date.now()/1000), 0, 0, 100644, debian_binary_data.length);
         generate_control_targz(control, postinst, prerm).then((control_tar_gz_data) => {
             let data_tar_gz_tempFile = tmpjs.tmpNameSync();
-            promise_targz_compress({src: data_tar_gz_datadir.name, dest: data_tar_gz_tempFile, tar: {entries: ["."]}}).then(() => {
+            promise_targz_compress({src: data_tar_gz_datadir.name, dest: data_tar_gz_tempFile, tar: {entries: ["."], uid: 0, gid: 0}}).then(() => {
                 data_tar_gz_data = fs.readFileSync(data_tar_gz_tempFile);
                 fs.unlinkSync(data_tar_gz_tempFile);
                 rimraf.sync(data_tar_gz_datadir.name);

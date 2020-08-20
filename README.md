@@ -23,7 +23,8 @@ var deb = require('@fade-project/deb-build')
  * deb.generate_ar_header(filename, timestamp, owner_id, group_id, filemode, filesize)
    * It'll return 60-byte Buffer. It generates each file's header in ar archive.
  * deb.build(name, version, desc, url, architecture, depends, priority, run, maintainer_name, maintainer_email, type, postinst_payload, prerm_payload)
-   * It'll return full debian binary. Accept parameters as a String.
+   * It'll return full debian binary. Accept parameters as a String (except some parameters, see below).
+   * It accept "depends" parameter as a comma-space separated String or an Array.
 
 ## Credit
  * [targz](https://github.com/miskun/targz) - [MIT License](https://github.com/miskun/targz/blob/master/LICENSE)
