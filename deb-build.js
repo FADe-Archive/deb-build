@@ -43,13 +43,14 @@ function promise_targz_compress(opt) {
     });
 }
 function generate_deb_control(name, version, maintainer_name, maintainer_email, depends, architecture, priority, url, desc) {
-    return `Package: ${name}
+    let str = `Package: ${name}
 Version: ${version}
 Priority: ${priority}
 Architecture: ${architecture}
 Maintainer: ${maintainer_name} <${maintainer_email}>
-Depends: ${depends}
-Homepage: ${url}
+`;
+    if(depends != "none") str += `Depends: ${depends}\n`;
+    str += `Homepage: ${url}
 Description: ${desc}\n`;
 }
 function generate_deb_postinst(name, version, desc, cmdline, type, maintainer_name, maintainer_email, postinst_payload) {

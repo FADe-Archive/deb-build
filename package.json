@@ -1,6 +1,6 @@
 {
   "name": "@fade-project/deb-build",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Build a Debian package in Node.js code",
   "main": "deb-build.js",
   "scripts": {
