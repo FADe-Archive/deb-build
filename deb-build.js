@@ -52,6 +52,7 @@ Maintainer: ${maintainer_name} <${maintainer_email}>
     if(depends != "none") str += `Depends: ${depends}\n`;
     str += `Homepage: ${url}
 Description: ${desc}\n`;
+    return str;
 }
 function generate_deb_postinst(name, version, desc, cmdline, type, maintainer_name, maintainer_email, postinst_payload) {
     let str = "#!/bin/bash\n";
