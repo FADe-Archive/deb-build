@@ -14,7 +14,8 @@ const zlib = require('zlib');
  */
 
 const types = {
-    systemd: 'systemd',
+    service: 'service',
+    systemd: 'service',
     isolated: 'isolated',
     normal: 'normal'
 };
@@ -56,13 +57,13 @@ Description: ${desc}\n`;
 }
 function generate_deb_postinst(name, version, desc, cmdline, type, maintainer_name, maintainer_email, postinst_payload) {
     let str = "#!/bin/bash\n";
-    if (type == types.systemd || type == types.isolated) {
+    if (type == types.service || type == types.isolated) {
         str += `useradd -r -s /sbin/nologin -g nogroup -d /usr/lib/${name} -c "${desc}" ${name}
 chown -R ${name}:root /usr/lib/${name}\n`;
     }
     str += `echo "${name} v${version} by ${maintainer_name} <${maintainer_email}>"
 ${postinst_payload}\n`;
-    if (type == types.systemd) {
+    if (type == types.service) {
         str += `cat >> /lib/systemd/system/${name}.service << EOF
 [Unit]
 Description=${desc}
@@ -87,13 +88,13 @@ systemctl start ${name}`;
 function generate_deb_prerm(name, type, prerm_payload) {
     let str = `#!/bin/bash
 ${prerm_payload}\n`;
-    if(type == types.systemd) {
+    if(type == types.service) {
         str += `systemctl stop ${name}
 systemctl disable ${name}
 rm /lib/systemd/system/${name}.service
 systemctl daemon-reload\n`;
     }
-    if(type == types.systemd || type == types.isolated)
+    if(type == types.service || type == types.isolated)
         str += `userdel ${name}\n`;
     str += `rm /usr/lib/${name}
 mkdir /usr/lib/${name}`;
