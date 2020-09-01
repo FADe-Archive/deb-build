@@ -64,7 +64,13 @@ chown -R ${name}:root /usr/lib/${name}\n`;
     str += `echo "${name} v${version} by ${maintainer_name} <${maintainer_email}>"
 ${postinst_payload}\n`;
     if (type == types.service) {
-        str += `cat >> /lib/systemd/system/${name}.service << EOF
+        str += `
+if [ "$(uname)" != "Linux" ]; then
+echo "Sorry, but this package is only installable on Linux system."
+exit 1
+
+elif [ strings /proc/1/exe | grep -q "/lib/systemd" ]; then
+cat >> /lib/systemd/system/${name}.service << EOF
 [Unit]
 Description=${desc}
 
@@ -72,7 +78,7 @@ Description=${desc}
 Type=simple
 User=${name}
 WorkingDirectory=/usr/lib/${name}
-ExecStart=/bin/bash -c "cd /usr/lib/${name};${cmdline}"
+ExecStart=/bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").replace(/'/g,"\\\'")}"
 
 [Install]
 WantedBy=multi-user.target
@@ -80,9 +86,18 @@ EOF
 chmod 644 /lib/systemd/system/${name}.service
 systemctl daemon-reload
 systemctl enable ${name}
-systemctl start ${name}`;
+systemctl start ${name}
+
+else
+echo "Sorry, but this package dosen't support $(realpath /proc/1/exe) in the moment."
+exit 1
+fi`;
+/*
+elif [ strings /proc/1/exe | grep -q "sysvinit" ]; then
+
+elif [ strings /proc/1/exe | grep -q "upstart" ]; then
+*/
     }
-    //.replace(/"/g,"\\\"").replace(/'/g,"\\\'")
     return str;
 }
 function generate_deb_prerm(name, type, prerm_payload) {
