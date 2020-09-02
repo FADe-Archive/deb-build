@@ -69,7 +69,7 @@ if [ "$(uname)" != "Linux" ]; then
 echo "Sorry, but this package is only installable on Linux system."
 exit 1
 
-elif [ strings /proc/1/exe | grep -q "/lib/systemd" ]; then
+elif ( strings /proc/1/exe | grep -q "/lib/systemd" ); then
 cat >> /lib/systemd/system/${name}.service << EOF
 [Unit]
 Description=${desc}
@@ -93,9 +93,9 @@ echo "Sorry, but this package dosen't support $(realpath /proc/1/exe) in the mom
 exit 1
 fi`;
 /*
-elif [ strings /proc/1/exe | grep -q "sysvinit" ]; then
+elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
 
-elif [ strings /proc/1/exe | grep -q "upstart" ]; then
+elif ( strings /proc/1/exe | grep -q "upstart" ); then
 */
     }
     return str;
@@ -104,10 +104,15 @@ function generate_deb_prerm(name, type, prerm_payload) {
     let str = `#!/bin/bash
 ${prerm_payload}\n`;
     if(type == types.service) {
-        str += `systemctl stop ${name}
+        str += `
+if [ "$(uname)" != "Linux" ]; then
+// Do nothing
+elif ( strings /proc/1/exe | grep -q "/lib/systemd" ); then
+systemctl stop ${name}
 systemctl disable ${name}
 rm /lib/systemd/system/${name}.service
-systemctl daemon-reload\n`;
+systemctl daemon-reload
+fi\n`;
     }
     if(type == types.service || type == types.isolated)
         str += `userdel ${name}\n`;
