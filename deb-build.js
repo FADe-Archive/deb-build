@@ -66,11 +66,10 @@ ${postinst_payload}\n`;
     if (type == types.service) {
         str += `
 if [ "$(uname)" != "Linux" ]; then
-echo "Sorry, but this package is only installable on Linux system."
-exit 1
-
+    echo "Sorry, but this package is only installable on Linux system."
+    exit 1
 elif ( strings /proc/1/exe | grep -q "/lib/systemd" ); then
-cat >> /lib/systemd/system/${name}.service << EOF
+    cat >> /lib/systemd/system/${name}.service << EOF
 [Unit]
 Description=${desc}
 
@@ -83,14 +82,78 @@ ExecStart=/bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").repla
 [Install]
 WantedBy=multi-user.target
 EOF
-chmod 644 /lib/systemd/system/${name}.service
-systemctl daemon-reload
-systemctl enable ${name}
-systemctl start ${name}
+    chmod 644 /lib/systemd/system/${name}.service
+    systemctl daemon-reload
+    systemctl enable ${name}
+    systemctl start ${name}
 
+elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
+    cat >> /etc/init.d/${name} << EOF
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: ${name}
+# Required-Start: $local_fs $network $named $time $syslog
+# Required-Stop: $local_fs $network $named $time $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Description: ${desc}
+### END INIT INFO
+
+## Reference: https://gist.github.com/naholyr/4275302
+## Thanks for naholyr for a reference.
+
+stop() {
+    if [ ! -f /var/run/${name}.pid ]; then
+        log_failure_msg "${name} is not running"
+        exit 1
+    fi
+    log_daemon_msg "Stopping ${desc}" "${name}" || true
+    kill -SIGTERM $(cat /var/run/${name}.pid) && rm -f /var/run/${name}.pid
+    log_end_msg $?
+}
+
+start() {
+    if [ -f /var/run/${name}.pid ] && kill -0 $(cat /var/run/${name}.pid); then
+        log_failure_msg "${name} is already running"
+        exit 1
+    fi
+    log_daemon_msg "Starting ${desc}" "${name}" || true
+    sudo -H -u ${name} /bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").replace(/'/g,"\\\'")} &> /var/log/${name}.log & echo $$" > /var/pid/${name}.pid
+    log_end_msg $?
+fi
+}
+
+status() {
+    if [ ! -f /var/run/${name}.pid ]; then
+        NOT="not"
+    fi
+    log_action_msg "${name} is $NOT running"
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    status)
+        status
+        ;;
+    *)
+        log_action_msg "Usage: /etc/init.d/${name} {start|stop|restart|status}
+esac
+EOF
+    chmod 755 /etc/init.d/${name}
+    update-rc.d ${name} defaults
+    /etc/init.d/${name} start
 else
-echo "Sorry, but this package dosen't support $(realpath /proc/1/exe) in the moment."
-exit 1
+    echo "Sorry, but this package dosen't support $(realpath /proc/1/exe) in the moment."
+    exit 1
 fi`;
 /*
 elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
@@ -106,12 +169,16 @@ ${prerm_payload}\n`;
     if(type == types.service) {
         str += `
 if [ "$(uname)" != "Linux" ]; then
-// Do nothing
+    // Do nothing
 elif ( strings /proc/1/exe | grep -q "/lib/systemd" ); then
-systemctl stop ${name}
-systemctl disable ${name}
-rm /lib/systemd/system/${name}.service
-systemctl daemon-reload
+    systemctl stop ${name}
+    systemctl disable ${name}
+    rm /lib/systemd/system/${name}.service
+    systemctl daemon-reload
+elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
+    /etc/init.d/${name} stop
+    update-rc.d -f ${name} remove
+    rm -f /etc/init.d/${name}
 fi\n`;
     }
     if(type == types.service || type == types.isolated)
