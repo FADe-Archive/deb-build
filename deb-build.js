@@ -169,7 +169,7 @@ ${prerm_payload}\n`;
     if(type == types.service) {
         str += `
 if [ "$(uname)" != "Linux" ]; then
-    // Do nothing
+    ## Do nothing
 elif ( strings /proc/1/exe | grep -q "/lib/systemd" ); then
     systemctl stop ${name}
     systemctl disable ${name}
@@ -183,7 +183,7 @@ fi\n`;
     }
     if(type == types.service || type == types.isolated)
         str += `userdel ${name}\n`;
-    str += `rm /usr/lib/${name}
+    str += `rm -rf /usr/lib/${name}
 mkdir /usr/lib/${name}`;
     return str;
 }
