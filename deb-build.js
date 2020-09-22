@@ -102,7 +102,7 @@ elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
 ## Reference: https://gist.github.com/naholyr/4275302
 ## Thanks for naholyr for a reference.
 
-. /lib/lsb/init_functions
+. /lib/lsb/init-functions
 
 stop() {
     if [ ! -f /var/run/${name}.pid ]; then
@@ -122,7 +122,7 @@ start() {
     log_daemon_msg "Starting ${desc}" "${name}" || true
     touch /var/log/${name}.log
     chown ${name} /var/log/${name}.log
-    sudo -H -u ${name} /bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").replace(/'/g,"\\\'")} > /var/log/${name}.log 2>\\&1 \\& echo \\$!" > /var/run/${name}.pid
+    sudo -H -u ${name} /bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").replace(/'/g,"\\\'")} > /var/log/${name}.log 2>&1 & echo \\$!" > /var/run/${name}.pid
     log_end_msg $?
 }
 
