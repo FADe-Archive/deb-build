@@ -88,12 +88,12 @@ EOF
     systemctl start ${name}
 
 elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
-    cat >> /etc/init.d/${name} << EOF
+    cat > /etc/init.d/${name} << EOF
 #!/bin/bash
 ### BEGIN INIT INFO
 # Provides: ${name}
-# Required-Start: $local_fs $network $named $time $syslog
-# Required-Stop: $local_fs $network $named $time $syslog
+# Required-Start: \\$local_fs \\$network \\$named \\$time \\$syslog
+# Required-Stop: \\$local_fs \\$network \\$named \\$time \\$syslog
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
 # Description: ${desc}
@@ -108,29 +108,28 @@ stop() {
         exit 1
     fi
     log_daemon_msg "Stopping ${desc}" "${name}" || true
-    kill -SIGTERM $(cat /var/run/${name}.pid) && rm -f /var/run/${name}.pid
-    log_end_msg $?
+    kill -SIGTERM \\$(cat /var/run/${name}.pid) && rm -f /var/run/${name}.pid
+    log_end_msg \\$?
 }
 
 start() {
-    if [ -f /var/run/${name}.pid ] && kill -0 $(cat /var/run/${name}.pid); then
+    if [ -f /var/run/${name}.pid ] && kill -0 \\$(cat /var/run/${name}.pid); then
         log_failure_msg "${name} is already running"
         exit 1
     fi
     log_daemon_msg "Starting ${desc}" "${name}" || true
-    sudo -H -u ${name} /bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").replace(/'/g,"\\\'")} &> /var/log/${name}.log & echo $$" > /var/pid/${name}.pid
+    sudo -H -u ${name} /bin/bash -c "cd /usr/lib/${name};${cmdline.replace(/"/g,"\\\"").replace(/'/g,"\\\'")} > /var/log/${name}.log 2>\\&1 \\& echo \\$\\$" > /var/run/${name}.pid
     log_end_msg $?
-fi
 }
 
 status() {
     if [ ! -f /var/run/${name}.pid ]; then
         NOT="not"
     fi
-    log_action_msg "${name} is $NOT running"
+    log_action_msg "${name} is \\$NOT running"
 }
 
-case "$1" in
+case "\\$1" in
     start)
         start
         ;;
@@ -145,7 +144,7 @@ case "$1" in
         status
         ;;
     *)
-        log_action_msg "Usage: /etc/init.d/${name} {start|stop|restart|status}
+        log_action_msg "Usage: /etc/init.d/${name} {start|stop|restart|status}"
 esac
 EOF
     chmod 755 /etc/init.d/${name}
@@ -169,7 +168,7 @@ ${prerm_payload}\n`;
     if(type == types.service) {
         str += `
 if [ "$(uname)" != "Linux" ]; then
-    // Do nothing
+    sleep 1
 elif ( strings /proc/1/exe | grep -q "/lib/systemd" ); then
     systemctl stop ${name}
     systemctl disable ${name}
