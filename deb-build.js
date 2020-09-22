@@ -182,7 +182,7 @@ fi\n`;
     }
     if(type == types.service || type == types.isolated)
         str += `userdel ${name}\n`;
-    str += `rm /usr/lib/${name}
+    str += `rm -rf /usr/lib/${name}
 mkdir /usr/lib/${name}`;
     return str;
 }
