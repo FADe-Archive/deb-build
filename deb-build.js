@@ -105,17 +105,18 @@ elif ( strings /proc/1/exe | grep -q "sysvinit" ); then
 . /lib/lsb/init-functions
 
 stop() {
-    if [ ! -f /var/run/${name}.pid ]; then
+    if [ ! -f /var/run/${name}.pid ] && (! kill -0 \\$(cat /var/run/${name}.pid)); then
         log_failure_msg "${name} is not running"
         exit 1
     fi
     log_daemon_msg "Stopping ${desc}" "${name}" || true
-    kill -SIGTERM \\$(cat /var/run/${name}.pid) && rm -f /var/run/${name}.pid
+    kill -SIGTERM \\$(cat /var/run/${name}.pid) 2>/dev/null
     log_end_msg \\$?
+    rm -f /var/run/${name}.pid
 }
 
 start() {
-    if [ -f /var/run/${name}.pid ] && kill -0 \\$(cat /var/run/${name}.pid); then
+    if [ -f /var/run/${name}.pid ] && (kill -0 \\$(cat /var/run/${name}.pid) 2>/dev/null); then
         log_failure_msg "${name} is already running"
         exit 1
     fi
@@ -127,10 +128,10 @@ start() {
 }
 
 status() {
-    if [ ! -f /var/run/${name}.pid ]; then
-        NOT="not"
+    if [ ! -f /var/run/${name}.pid ] && (! kill -0 \\$(cat /var/run/${name}.pid)2>/dev/null);; then
+        NOT=" not"
     fi
-    log_action_msg "${name} is \\$NOT running"
+    log_action_msg "${name} is\\$NOT running"
 }
 
 case "\\$1" in
