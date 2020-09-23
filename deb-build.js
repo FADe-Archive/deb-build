@@ -110,7 +110,7 @@ stop() {
         exit 1
     fi
     log_daemon_msg "Stopping ${desc}" "${name}" || true
-    kill -SIGTERM \\$(cat /var/run/${name}.pid) 2>/dev/null
+    pkill -TERM -P \\$(cat /var/run/${name}.pid) 2>/dev/null
     log_end_msg \\$?
     rm -f /var/run/${name}.pid
 }
