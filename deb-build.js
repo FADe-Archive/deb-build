@@ -128,7 +128,7 @@ start() {
 }
 
 status() {
-    if [ ! -f /var/run/${name}.pid ] && (! kill -0 \\$(cat /var/run/${name}.pid)2>/dev/null);; then
+    if [ ! -f /var/run/${name}.pid ] && (! kill -0 \\$(cat /var/run/${name}.pid)2>/dev/null); then
         NOT=" not"
     fi
     log_action_msg "${name} is\\$NOT running"
