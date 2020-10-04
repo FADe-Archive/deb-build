@@ -1,3 +1,7 @@
+# DEPRECATED
+ * THIS PROJECT IS BEING REINTEGRATED TO [MAIN PROJECT](https://github.com/fade-project/fade).
+ * NO FUTHER UPDATES.
+
 # deb-build
  * Build a Debian package in javascript code
 
